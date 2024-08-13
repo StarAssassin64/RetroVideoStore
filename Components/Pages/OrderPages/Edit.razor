@@ -1,0 +1,100 @@
+﻿@page "/Orders/edit"
+
+@using Microsoft.EntityFrameworkCore
+@using RetroVideoStore.Models
+@inject IDbContextFactory<RetroVideoStore.Data.OrderContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h4>Order</h4>
+<hr />
+@if (Order is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Order" OnValidSubmit="UpdateOrder" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Order.Id" value="@Order.Id" />
+                <div class="mb-3">
+                    <label for="customername" class="form-label">CustomerName:</label>
+                    <InputText id="customername" @bind-Value="Order.CustomerName" class="form-control" />
+                    <ValidationMessage For="() => Order.CustomerName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="customeremail" class="form-label">CustomerEmail:</label>
+                    <InputText id="customeremail" @bind-Value="Order.CustomerEmail" class="form-control" />
+                    <ValidationMessage For="() => Order.CustomerEmail" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="totalcost" class="form-label">TotalCost:</label>
+                    <InputNumber id="totalcost" @bind-Value="Order.TotalCost" class="form-control" />
+                    <ValidationMessage For="() => Order.TotalCost" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/orders">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Order? Order { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Order ??= await context.Orders.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Order is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see https://aka.ms/RazorPagesCRUD.
+    public async Task UpdateOrder()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Order!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!OrderExists(Order!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/orders");
+    }
+
+    bool OrderExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Orders.Any(e => e.Id == id);
+    }
+}

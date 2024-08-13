@@ -28,5 +28,10 @@ namespace RetroVideoStore.Models
                 } 
             } 
         }
+
+        public void UpdateTotalCost()
+        {
+            TotalCost = 0;
+        }
     }
 }

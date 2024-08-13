@@ -1,0 +1,26 @@
+﻿@page "/orders"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using RetroVideoStore.Models
+@inject IDbContextFactory<RetroVideoStore.Data.OrderContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="orders/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="DbFactory.CreateDbContext().Orders">
+    <PropertyColumn Property="order => order.CustomerName" />
+    <PropertyColumn Property="order => order.CustomerEmail" />
+    <PropertyColumn Property="order => order.TotalCost" />
+
+    <TemplateColumn Context="order">
+        <a href="@($"orders/edit?id={order.Id}")">Edit</a> |
+        <a href="@($"orders/details?id={order.Id}")">Details</a> |
+        <a href="@($"orders/delete?id={order.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>

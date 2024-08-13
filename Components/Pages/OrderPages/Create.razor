@@ -1,0 +1,83 @@
+﻿@page "/orders/create"
+
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using Microsoft.EntityFrameworkCore
+@using RetroVideoStore.Models
+@inject IDbContextFactory<RetroVideoStore.Data.OrderContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject IDbContextFactory<RetroVideoStore.Data.RentalContext> rentalContext
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h4>Order</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Order" OnValidSubmit="AddOrder" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="customername" class="form-label">CustomerName:</label> 
+                <InputText id="customername" @bind-Value="Order.CustomerName" class="form-control" /> 
+                <ValidationMessage For="() => Order.CustomerName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="customeremail" class="form-label">CustomerEmail:</label> 
+                <InputText id="customeremail" @bind-Value="Order.CustomerEmail" class="form-control" /> 
+                <ValidationMessage For="() => Order.CustomerEmail" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label>Rental Options</label>
+                @foreach(var item in Rentals)
+                {
+                    <input type="checkbox" @bind="item.Selected" @onClick="(()=>SelectRental(item))" />
+                }
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/orders">Back to List</a>
+</div>
+
+@code {
+
+    [SupplyParameterFromForm]
+    public Order Order { get; set; } = new();
+
+    [Parameter]
+    public MultiSelectList Rentals { get; set; }
+
+    public List<Rental> SelectedRentals { get; set; } = new List<Rental>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Rentals = new MultiSelectList(rentalContext.CreateDbContext().Rentals.ToList());
+    }
+
+    public void SelectRental(SelectListItem item)
+    {
+        List<Rental> rentals = rentalContext.CreateDbContext().Rentals.ToList();
+        foreach(var rental in rentals)
+        {
+            if (rental.Title == item.Value)
+            {
+                SelectedRentals.Add(rental);
+            }
+        }
+    }
+
+    // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+    public async Task AddOrder()
+    {
+        Order.UpdateTotalCost();
+        using var context = DbFactory.CreateDbContext();
+        context.Orders.Add(Order);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/orders");
+    }
+}

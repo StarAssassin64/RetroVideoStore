@@ -1,0 +1,105 @@
+﻿@page "/Rentals/edit"
+
+@using Microsoft.EntityFrameworkCore
+@using RetroVideoStore.Models
+@inject IDbContextFactory<RetroVideoStore.Data.RentalContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h4>Rental</h4>
+<hr />
+@if (Rental is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Rental" OnValidSubmit="UpdateRental" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Rental.Id" value="@Rental.Id" />
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title:</label>
+                    <InputText id="title" @bind-Value="Rental.Title" class="form-control" />
+                    <ValidationMessage For="() => Rental.Title" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description:</label>
+                    <InputText id="description" @bind-Value="Rental.Description" class="form-control" />
+                    <ValidationMessage For="() => Rental.Description" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="format" class="form-label">Format:</label>
+                    <InputText id="format" @bind-Value="Rental.Format" class="form-control" />
+                    <ValidationMessage For="() => Rental.Format" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="cost" class="form-label">Cost:</label>
+                    <InputNumber id="cost" @bind-Value="Rental.Cost" class="form-control" />
+                    <ValidationMessage For="() => Rental.Cost" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/rentals">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Rental? Rental { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Rental ??= await context.Rentals.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Rental is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see https://aka.ms/RazorPagesCRUD.
+    public async Task UpdateRental()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Rental!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!RentalExists(Rental!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/rentals");
+    }
+
+    bool RentalExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Rentals.Any(e => e.Id == id);
+    }
+}

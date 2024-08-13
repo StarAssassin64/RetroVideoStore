@@ -1,0 +1,53 @@
+﻿@page "/rentals/details"
+
+@using Microsoft.EntityFrameworkCore
+@using RetroVideoStore.Models
+@inject IDbContextFactory<RetroVideoStore.Data.RentalContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h4>Rental</h4>
+    <hr />
+    @if (rental is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Title</dt>
+            <dd class="col-sm-10">@rental.Title</dd>
+            <dt class="col-sm-2">Description</dt>
+            <dd class="col-sm-10">@rental.Description</dd>
+            <dt class="col-sm-2">Format</dt>
+            <dd class="col-sm-10">@rental.Format</dd>
+            <dt class="col-sm-2">Cost</dt>
+            <dd class="col-sm-10">@rental.Cost</dd>
+        </dl>
+        <div>
+            <a href="@($"/rentals/edit?id={rental.Id}")">Edit</a> |
+            <a href="@($"/rentals")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    Rental? rental;
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        rental = await context.Rentals.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (rental is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

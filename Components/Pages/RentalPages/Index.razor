@@ -1,0 +1,27 @@
+﻿@page "/rentals"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using RetroVideoStore.Models
+@inject IDbContextFactory<RetroVideoStore.Data.RentalContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="rentals/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="DbFactory.CreateDbContext().Rentals">
+    <PropertyColumn Property="rental => rental.Title" />
+    <PropertyColumn Property="rental => rental.Description" />
+    <PropertyColumn Property="rental => rental.Format" />
+    <PropertyColumn Property="rental => rental.Cost" />
+
+    <TemplateColumn Context="rental">
+        <a href="@($"rentals/edit?id={rental.Id}")">Edit</a> |
+        <a href="@($"rentals/details?id={rental.Id}")">Details</a> |
+        <a href="@($"rentals/delete?id={rental.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
